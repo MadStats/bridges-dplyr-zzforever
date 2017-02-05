@@ -30,4 +30,29 @@ wi = filter(x, STATE_CODE_001 == 55)
 build_year <- wi %>% group_by(YEAR_BUILT_027) %>% dplyr::summarise(count = n())
 ggplot(build_year) + geom_line(mapping = aes(y = count, x = YEAR_BUILT_027), color = "limegreen")
 
-#
+# Plot2, relationship between the average condition of different parts and the built year.
+
+condition <- wi %>% group_by(YEAR_BUILT_027) %>% dplyr::summarise(deck = mean(parse_integer(DECK_COND_058, na = "N"), na.rm = TRUE), 
+                                                                  supstr = mean(parse_integer(SUPERSTRUCTURE_COND_059, na = "N"), na.rm = TRUE),
+                                                                  substr = mean(parse_integer(SUBSTRUCTURE_COND_060, na = "N"), na.rm = TRUE),
+                                                                  channel = mean(parse_integer(CHANNEL_COND_061, na = "N"), na.rm = TRUE),
+                                                                  culvert = mean(parse_integer(CULVERT_COND_062, na = "N"), na.rm = TRUE))
+numyears <- dim(condition)[1]
+conditions <- data.frame(year_built = rep(condition$YEAR_BUILT_027, 5), type = rep(c("deck", "supstr", "substr", "channel", "culvert"), each = numyears), condition = c(condition$deck, condition$supstr, condition$substr, condition$channel, condition$culvert))
+ggplot(data = conditions, aes(y = condition, x = year_built, colour = type)) + geom_line()
+
+#Plot3, the relationship between the average condition and location of each bridge
+min2dec = function(x) {
+  as.numeric(substr(x, 1, 2)) + as.numeric(substr(x, 3, 8)) / 6e+05 %>% return
+}
+wi = mutate(wi, lat = min2dec(LAT_016), lon = min2dec(LONG_017))
+wi = filter(wi, lon<100)
+num_bridge_wi <- dim(wi)[1]
+wi$avg_cond <- numeric(num_bridge_wi)
+for(i in 1:num_bridge_wi) {
+  wi$avg_cond[i] <- mean(c(as.integer(wi$DECK_COND_058[i]), as.integer(wi$SUPERSTRUCTURE_COND_059[i]), 
+                           as.integer(wi$SUBSTRUCTURE_COND_060[i]), as.integer(wi$CHANNEL_COND_061[i])
+                           ,as.integer(wi$CULVERT_COND_062[i])), na.rm = TRUE)
+}
+
+ggplot(data = wi) + geom_point(mapping = aes(y = lat, x = lon,col = avg_cond))
