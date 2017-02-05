@@ -30,3 +30,4 @@ wi = filter(x, STATE_CODE_001 == 55)
 build_year <- wi %>% group_by(YEAR_BUILT_027) %>% dplyr::summarise(count = n())
 ggplot(build_year) + geom_line(mapping = aes(y = count, x = YEAR_BUILT_027), color = "limegreen")
 
+#
